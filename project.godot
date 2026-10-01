@@ -11,11 +11,3 @@ window/size/window_height_override=720
 [rendering]
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-
-[input]
-move_forward={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":87)]}
-move_back={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":83)]}
-move_left={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":65)]}
-move_right={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":68)]}
-toggle_camera={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":86)]}
-kettlebell={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":67)]}
