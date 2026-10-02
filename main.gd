@@ -177,13 +177,14 @@ func _load_character_and_animations() -> void:
     if character_model == null and swing_source != null:
         character_model = swing_source
         character_model.visible = third_person
-    if mannequin:
-        mannequin.visible = third_person
         anim_player = _find_animation_player(character_model)
         _prepare_character_visual(character_model)
         has_character_mesh = _contains_mesh(character_model)
         if not has_character_mesh:
             _make_visible_mannequin()
+
+    if mannequin:
+        mannequin.visible = third_person
 
 func _contains_mesh(root: Node) -> bool:
     if root is MeshInstance3D:
