@@ -16,6 +16,8 @@ var mouse_sensitivity := 0.0025
 var pitch := 0.0
 var yaw := 0.0
 var action_playing := false
+var has_character_mesh := false
+var mannequin: Node3D
 
 const ROOM_SIZE := 14.0
 const STAND_HEIGHT := 1.6
@@ -155,6 +157,9 @@ func _load_character_and_animations() -> void:
             # The FBX can contain an animation skeleton without a visible mesh.
             # Keep all visual MeshInstance3D nodes visible in third person.
             _prepare_character_visual(character_model)
+            has_character_mesh = _contains_mesh(character_model)
+            if not has_character_mesh:
+                _make_visible_mannequin()
 
     var swing_path := "res://Kettlebell Swing.fbx"
     if ResourceLoader.exists(swing_path):
@@ -172,8 +177,62 @@ func _load_character_and_animations() -> void:
     if character_model == null and swing_source != null:
         character_model = swing_source
         character_model.visible = third_person
+    if mannequin:
+        mannequin.visible = third_person
         anim_player = _find_animation_player(character_model)
         _prepare_character_visual(character_model)
+        has_character_mesh = _contains_mesh(character_model)
+        if not has_character_mesh:
+            _make_visible_mannequin()
+
+func _contains_mesh(root: Node) -> bool:
+    if root is MeshInstance3D:
+        return true
+    for child in root.get_children():
+        if _contains_mesh(child):
+            return true
+    return false
+
+func _make_visible_mannequin() -> void:
+    if mannequin != null:
+        return
+    mannequin = Node3D.new()
+    mannequin.name = "VisibleCharacterFallback"
+    player.add_child(mannequin)
+
+    var body := MeshInstance3D.new()
+    var body_mesh := CapsuleMesh.new()
+    body_mesh.height = 1.0
+    body_mesh.radius = 0.32
+    body.mesh = body_mesh
+    body.position.y = 1.0
+    mannequin.add_child(body)
+
+    var head := MeshInstance3D.new()
+    var head_mesh := SphereMesh.new()
+    head_mesh.radius = 0.25
+    head_mesh.height = 0.5
+    head.mesh = head_mesh
+    head.position.y = 1.75
+    mannequin.add_child(head)
+
+    var left_arm := _make_limb(Vector3(-0.48, 1.05, 0), 0.8)
+    var right_arm := _make_limb(Vector3(0.48, 1.05, 0), 0.8)
+    var left_leg := _make_limb(Vector3(-0.18, 0.35, 0), 0.9)
+    var right_leg := _make_limb(Vector3(0.18, 0.35, 0), 0.9)
+    mannequin.add_child(left_arm)
+    mannequin.add_child(right_arm)
+    mannequin.add_child(left_leg)
+    mannequin.add_child(right_leg)
+
+func _make_limb(pos: Vector3, height: float) -> MeshInstance3D:
+    var limb := MeshInstance3D.new()
+    var mesh := CapsuleMesh.new()
+    mesh.height = height
+    mesh.radius = 0.12
+    limb.mesh = mesh
+    limb.position = pos
+    return limb
 
 func _prepare_character_visual(root: Node) -> void:
     for node in root.get_children():
@@ -255,6 +314,11 @@ func _set_crouch(value: bool) -> void:
 func _physics_process(delta: float) -> void:
     if player == null:
         return
+
+    # Hold Ctrl to crouch. The camera and collision follow the crouched height.
+    var wants_crouch := Input.is_key_pressed(KEY_CTRL)
+    if wants_crouch != crouching:
+        _set_crouch(wants_crouch)
 
     var x := float(Input.is_key_pressed(KEY_D)) - float(Input.is_key_pressed(KEY_A))
     var z := float(Input.is_key_pressed(KEY_S)) - float(Input.is_key_pressed(KEY_W))
